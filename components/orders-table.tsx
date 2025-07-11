@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Search, Trash2, TrendingUp, Edit3 } from "lucide-react"
+import { ExternalLink, Search, Trash2, TrendingUp, Edit3, Check, X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Order, OrderStatus } from "@/lib/types"
 import { EditOrderModal } from "@/components/edit-order-modal"
@@ -24,8 +24,8 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [editModalOpen, setEditModalOpen] = useState(false)
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null)
+  const [editValue, setEditValue] = useState("")
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -96,6 +96,28 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
       default:
         return ""
     }
+  }
+
+  const startEditing = (id: string, field: string, currentValue: string | number) => {
+    setEditingCell({ id, field })
+    setEditValue(currentValue.toString())
+  }
+
+  const saveEdit = () => {
+    if (!editingCell) return
+    const { id, field } = editingCell
+    let value: string | number = editValue
+    if (field === "purchasePrice") {
+      value = Number.parseFloat(editValue) || 0
+    }
+    onUpdate(id, { [field]: value })
+    setEditingCell(null)
+    setEditValue("")
+  }
+
+  const cancelEdit = () => {
+    setEditingCell(null)
+    setEditValue("")
   }
 
   return (
@@ -199,7 +221,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
             {sortedOrders.map((order) => (
               <TableRow
                 key={order.id}
-                className={`${getRowHighlight(order.status)} even:bg-gray-50 dark:even:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors`}
+                className={`${getRowHighlight(order.status)} transition-colors`}
               >
                 {isHistoryView && (
                   <TableCell>
@@ -226,26 +248,92 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   </a>
                 </TableCell>
                 <TableCell className="font-medium dark:text-gray-300">
-                  {order.productName}
-                </TableCell>
-                <TableCell className="dark:text-gray-300">
-                  ${order.purchasePrice.toFixed(2)}
-                </TableCell>
-                <TableCell className="dark:text-gray-300">
-                  {order.trackingLink ? (
-                    <a
-                      href={order.trackingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      Track
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                  {editingCell?.id === order.id && editingCell?.field === "productName" && !isHistoryView ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                      />
+                      <Button size="sm" onClick={saveEdit}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   ) : (
-                    <span className="italic lowercase text-red-600 text-center block w-full">
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
+                      onClick={() => !isHistoryView && startEditing(order.id, "productName", order.productName)}
+                    >
+                      {order.productName}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="dark:text-gray-300">
+                  {editingCell?.id === order.id && editingCell?.field === "purchasePrice" && !isHistoryView ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                      />
+                      <Button size="sm" onClick={saveEdit}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
+                      onClick={() => !isHistoryView && startEditing(order.id, "purchasePrice", order.purchasePrice)}
+                    >
+                      ${order.purchasePrice.toFixed(2)}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="dark:text-gray-300">
+                  {editingCell?.id === order.id && editingCell?.field === "trackingLink" && !isHistoryView ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                      />
+                      <Button size="sm" onClick={saveEdit}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : order.trackingLink ? (
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
+                      onClick={() => !isHistoryView && startEditing(order.id, "trackingLink", order.trackingLink)}
+                    >
+                      <a
+                        href={order.trackingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        Track
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded italic lowercase text-red-600 text-center block w-full`}
+                      onClick={() => !isHistoryView && startEditing(order.id, "trackingLink", order.trackingLink)}
+                    >
                       n/a
-                    </span>
+                    </div>
                   )}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
@@ -285,17 +373,6 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setEditingOrder(order)
-                          setEditModalOpen(true)
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={() => onDelete(order.id)}
                         className="text-red-600 hover:text-red-800"
                       >
@@ -327,21 +404,6 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
       {filteredOrders.length === 0 && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">No orders found matching your criteria.</div>
       )}
-      <EditOrderModal
-        open={editModalOpen}
-        onOpenChange={(open) => {
-          setEditModalOpen(open)
-          if (!open) setEditingOrder(null)
-        }}
-        order={editingOrder}
-        onSave={(updates) => {
-          if (editingOrder) {
-            onUpdate(editingOrder.id, updates)
-          }
-          setEditModalOpen(false)
-          setEditingOrder(null)
-        }}
-      />
     </div>
   )
 }

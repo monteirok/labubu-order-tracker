@@ -79,6 +79,21 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
     }
   }
 
+  const getRowHighlight = (status: SaleStatus) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-100 dark:bg-yellow-900/30"
+      case "Shipped":
+        return "bg-blue-100 dark:bg-blue-900/30"
+      case "Completed":
+        return "bg-green-100 dark:bg-green-900/30"
+      case "Canceled":
+        return "bg-red-100 dark:bg-red-900/30"
+      default:
+        return ""
+    }
+  }
+
   const startEditing = (id: string, field: string, currentValue: string | number) => {
     setEditingCell({ id, field })
     setEditValue(currentValue.toString())
@@ -205,7 +220,10 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
           </TableHeader>
           <TableBody>
             {sortedSales.map((sale) => (
-              <TableRow key={sale.id} className="even:bg-gray-50 dark:even:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <TableRow
+                key={sale.id}
+                className={`${getRowHighlight(sale.status)} transition-colors`}
+              >
                 {isHistoryView && (
                   <TableCell>
                     <Checkbox
