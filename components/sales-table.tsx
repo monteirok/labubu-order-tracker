@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { ExternalLink, Search, Trash2, Check, X } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { Sale, SaleStatus } from "@/lib/types"
 
 interface SalesTableProps {
@@ -22,6 +23,7 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
   const [statusFilter, setStatusFilter] = useState<SaleStatus | "all">("all")
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null)
   const [editValue, setEditValue] = useState("")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const filteredSales = sales.filter((sale) => {
     const matchesSearch =
@@ -99,10 +101,34 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
       </div>
 
       {/* Table */}
+      {isHistoryView && selectedIds.size > 0 && (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => {
+            selectedIds.forEach((id) => onDelete(id))
+            setSelectedIds(new Set())
+          }}
+        >
+          Delete Selected ({selectedIds.size})
+        </Button>
+      )}
       <div className="rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
         <Table>
           <TableHeader>
             <TableRow>
+{isHistoryView && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={sales.length > 0 && selectedIds.size === filteredSales.length}
+                    indeterminate={selectedIds.size > 0 && selectedIds.size < filteredSales.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) setSelectedIds(new Set(filteredSales.map((s) => s.id)))
+                      else setSelectedIds(new Set())
+                    }}
+                  />
+                </TableHead>
+              )}
               <TableHead className="dark:text-white">Customer</TableHead>
               <TableHead className="dark:text-white">Product</TableHead>
               <TableHead className="dark:text-white">Price (CAD)</TableHead>
@@ -115,6 +141,19 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
           <TableBody>
             {filteredSales.map((sale) => (
               <TableRow key={sale.id}>
+                {isHistoryView && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(sale.id)}
+                      onCheckedChange={(checked) => {
+                        const next = new Set(selectedIds)
+                        if (checked) next.add(sale.id)
+                        else next.delete(sale.id)
+                        setSelectedIds(next)
+                      }}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="dark:text-gray-300">
                   {editingCell?.id === sale.id && editingCell?.field === "customerName" && !isHistoryView ? (
                     <div className="flex items-center gap-2">

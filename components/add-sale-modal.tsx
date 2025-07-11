@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -22,9 +22,11 @@ interface AddSaleModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAdd: (sale: Omit<Sale, "id">) => void
+  /** Optional initial data to prefill the form */
+  initialData?: Partial<Omit<Sale, "id">>
 }
 
-export function AddSaleModal({ open, onOpenChange, onAdd }: AddSaleModalProps) {
+export function AddSaleModal({ open, onOpenChange, onAdd, initialData }: AddSaleModalProps) {
   const [formData, setFormData] = useState({
     customerName: "",
     productName: "",
@@ -67,6 +69,20 @@ export function AddSaleModal({ open, onOpenChange, onAdd }: AddSaleModalProps) {
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
+
+  // Reset formData whenever the dialog opens (and use initialData if provided)
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        customerName: initialData?.customerName ?? "",
+        productName: initialData?.productName ?? "",
+        sellingPrice: initialData?.sellingPrice != null ? initialData.sellingPrice.toString() : "",
+        chatLink: initialData?.chatLink ?? "",
+        notes: initialData?.notes ?? "",
+        status: initialData?.status ?? "Pending",
+      })
+    }
+  }, [open, initialData])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

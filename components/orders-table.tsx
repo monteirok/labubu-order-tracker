@@ -6,21 +6,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Search, Trash2, Check, X } from "lucide-react"
+import { ExternalLink, Search, Trash2, Check, X, TrendingUp } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { Order, OrderStatus } from "@/lib/types"
 
 interface OrdersTableProps {
   orders: Order[]
   onUpdate: (id: string, updates: Partial<Order>) => void
   onDelete: (id: string) => void
+  /** Trigger adding a new outgoing sale prefilled from this order */
+  onCreateSale?: (order: Order) => void
   isHistoryView?: boolean
 }
 
-export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false }: OrdersTableProps) {
+export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistoryView = false }: OrdersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all")
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null)
   const [editValue, setEditValue] = useState("")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -46,9 +50,36 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
         return "bg-gray-100 text-gray-800"
     }
   }
+  const getRowHighlight = (status: OrderStatus) => {
+    switch (status) {
+      case "Ordered":
+        return "bg-blue-100 dark:bg-blue-900/30"
+      case "Shipped":
+        return "bg-yellow-100 dark:bg-yellow-900/30"
+      case "Delivered":
+      case "Completed":
+        return "bg-green-100 dark:bg-green-900/30"
+      case "Canceled":
+        return "bg-red-100 dark:bg-red-900/30"
+      default:
+        return ""
+    }
+  }
 
   return (
-      <div className="space-y-4">
+    <div className="space-y-4">
+      {isHistoryView && selectedIds.size > 0 && (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => {
+            selectedIds.forEach((id) => onDelete(id))
+            setSelectedIds(new Set())
+          }}
+        >
+          Delete Selected ({selectedIds.size})
+        </Button>
+      )}
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
@@ -80,6 +111,21 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
             <Table>
           <TableHeader>
             <TableRow>
+              {isHistoryView && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={filteredOrders.length > 0 && selectedIds.size === filteredOrders.length}
+                    indeterminate={selectedIds.size > 0 && selectedIds.size < filteredOrders.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedIds(new Set(filteredOrders.map((o) => o.id)))
+                      } else {
+                        setSelectedIds(new Set())
+                      }
+                    }}
+                  />
+                </TableHead>
+              )}
               <TableHead className="dark:text-white">Order #</TableHead>
               <TableHead className="dark:text-white">Product</TableHead>
               <TableHead className="dark:text-white">Price (CAD)</TableHead>
@@ -89,11 +135,21 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
             </TableRow>
           </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow
-                key={order.id}
-                className={order.status === 'Canceled' ? 'bg-red-50 dark:bg-red-900/30' : ''}
-              >
+            {filteredOrders.map((order) => (
+              <TableRow key={order.id} className={getRowHighlight(order.status)}>
+                {isHistoryView && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(order.id)}
+                      onCheckedChange={(checked) => {
+                        const next = new Set(selectedIds)
+                        if (checked) next.add(order.id)
+                        else next.delete(order.id)
+                        setSelectedIds(next)
+                      }}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="dark:text-gray-300">
                   <a
                     href={order.popmartLink}
@@ -197,15 +253,19 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
                       className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
                       onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "trackingLink" }), setEditValue(order.trackingLink))}
                     >
-                      <a
-                        href={order.trackingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                      >
-                        Track
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
+                      {order.trackingLink ? (
+                        <a
+                          href={order.trackingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        >
+                          Track
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-gray-500 dark:text-gray-400">N/A</span>
+                      )}
                     </div>
                   )}
                 </TableCell>
@@ -232,14 +292,26 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
                   {!isHistoryView && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(order.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      {onCreateSale && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onCreateSale(order)}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          <TrendingUp className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(order.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </TableCell>
               </TableRow>

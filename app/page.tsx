@@ -26,6 +26,7 @@ export default function Dashboard() {
   }, [])
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false)
   const [isAddSaleOpen, setIsAddSaleOpen] = useState(false)
+  const [saleInitialData, setSaleInitialData] = useState<Partial<Omit<Sale, "id">> | undefined>(undefined)
   const [activeTab, setActiveTab] = useState<"orders" | "sales">("orders")
   const [salesSubTab, setSalesSubTab] = useState<"active" | "completed">("active")
   const [ordersSubTab, setOrdersSubTab] = useState<"active" | "history">("active")
@@ -288,14 +289,21 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <OrdersTable
-                    orders={
+        <OrdersTable
+          orders={
                       ordersSubTab === "active"
                         ? orders.filter((order) => order.status !== "Canceled" && order.status !== "Completed")
                         : orders.filter((order) => order.status === "Canceled" || order.status === "Completed")
                     }
                     onUpdate={handleUpdateOrder}
                     onDelete={handleDeleteOrder}
+                    onCreateSale={(order) => {
+            setSaleInitialData({
+                        productName: order.productName,
+                        notes: `Order #${order.orderNumber}`,
+                      })
+                      setIsAddSaleOpen(true)
+                    }}
                     isHistoryView={ordersSubTab === "history"}
                   />
                 </CardContent>
@@ -380,8 +388,16 @@ export default function Dashboard() {
       </div>
 
       {/* Modals */}
-      <AddOrderModal open={isAddOrderOpen} onOpenChange={setIsAddOrderOpen} onAdd={handleAddOrder} />
-      <AddSaleModal open={isAddSaleOpen} onOpenChange={setIsAddSaleOpen} onAdd={handleAddSale} />
+        <AddOrderModal open={isAddOrderOpen} onOpenChange={setIsAddOrderOpen} onAdd={handleAddOrder} />
+        <AddSaleModal
+          open={isAddSaleOpen}
+          onOpenChange={(open) => {
+            setIsAddSaleOpen(open)
+            if (!open) setSaleInitialData(undefined)
+          }}
+          onAdd={handleAddSale}
+          initialData={saleInitialData}
+        />
     </div>
   )
 }
