@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Package, TrendingUp, Clock, CheckCircle, Archive } from "lucide-react"
@@ -14,41 +14,69 @@ import type { Order, Sale } from "@/lib/types"
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [sales, setSales] = useState<Sale[]>([])
+
+  // fetch persisted data on mount
+  useEffect(() => {
+    fetch('/api/orders')
+      .then((res) => res.json())
+      .then(setOrders)
+    fetch('/api/sales')
+      .then((res) => res.json())
+      .then(setSales)
+  }, [])
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false)
   const [isAddSaleOpen, setIsAddSaleOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"orders" | "sales">("orders")
   const [salesSubTab, setSalesSubTab] = useState<"active" | "completed">("active")
   const [ordersSubTab, setOrdersSubTab] = useState<"active" | "history">("active")
 
-  const handleAddOrder = (newOrder: Omit<Order, "id">) => {
-    const order: Order = {
-      ...newOrder,
-      id: crypto.randomUUID(),
-    }
+  const handleAddOrder = async (newOrder: Omit<Order, "id">) => {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    })
+    const order: Order = await res.json()
     setOrders((prev) => [order, ...prev])
   }
 
-  const handleAddSale = (newSale: Omit<Sale, "id">) => {
-    const sale: Sale = {
-      ...newSale,
-      id: crypto.randomUUID(),
-    }
+  const handleAddSale = async (newSale: Omit<Sale, "id">) => {
+    const res = await fetch('/api/sales', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newSale),
+    })
+    const sale: Sale = await res.json()
     setSales((prev) => [sale, ...prev])
   }
 
-  const handleUpdateOrder = (id: string, updates: Partial<Order>) => {
-    setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, ...updates } : order)))
+  const handleUpdateOrder = async (id: string, updates: Partial<Order>) => {
+    const res = await fetch(`/api/orders/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    const updated: Order = await res.json()
+    setOrders((prev) => prev.map((order) => (order.id === id ? updated : order)))
   }
 
-  const handleUpdateSale = (id: string, updates: Partial<Sale>) => {
-    setSales((prev) => prev.map((sale) => (sale.id === id ? { ...sale, ...updates } : sale)))
+  const handleUpdateSale = async (id: string, updates: Partial<Sale>) => {
+    const res = await fetch(`/api/sales/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    const updated: Sale = await res.json()
+    setSales((prev) => prev.map((sale) => (sale.id === id ? updated : sale)))
   }
 
-  const handleDeleteOrder = (id: string) => {
+  const handleDeleteOrder = async (id: string) => {
+    await fetch(`/api/orders/${id}`, { method: 'DELETE' })
     setOrders((prev) => prev.filter((order) => order.id !== id))
   }
 
-  const handleDeleteSale = (id: string) => {
+  const handleDeleteSale = async (id: string) => {
+    await fetch(`/api/sales/${id}`, { method: 'DELETE' })
     setSales((prev) => prev.filter((sale) => sale.id !== id))
   }
 

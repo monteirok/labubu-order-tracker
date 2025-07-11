@@ -26,7 +26,6 @@ interface AddOrderModalProps {
 export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps) {
   const [formData, setFormData] = useState({
     orderNumber: "",
-    popmartLink: "",
     productName: "",
     purchasePrice: "",
     trackingLink: "",
@@ -42,7 +41,7 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
 
     onAdd({
       orderNumber: formData.orderNumber,
-      popmartLink: formData.popmartLink,
+      popmartLink: `https://www.popmart.com/ca/order/${formData.orderNumber}`,
       productName: formData.productName,
       purchasePrice: Number.parseFloat(formData.purchasePrice),
       trackingLink: formData.trackingLink,
@@ -53,7 +52,6 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
     // Reset form
     setFormData({
       orderNumber: "",
-      popmartLink: "",
       productName: "",
       purchasePrice: "",
       trackingLink: "",
@@ -92,19 +90,6 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="popmartLink" className="dark:text-white">
-              PopMart Order URL
-            </Label>
-            <Input
-              id="popmartLink"
-              type="url"
-              value={formData.popmartLink}
-              onChange={(e) => handleChange("popmartLink", e.target.value)}
-              placeholder="https://popmart.com/order/..."
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-            />
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="productName" className="dark:text-white">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Search, Trash2 } from "lucide-react"
+import { ExternalLink, Search, Trash2, Check, X } from "lucide-react"
 import type { Order, OrderStatus } from "@/lib/types"
 
 interface OrdersTableProps {
@@ -19,6 +19,8 @@ interface OrdersTableProps {
 export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false }: OrdersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all")
+  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null)
+  const [editValue, setEditValue] = useState("")
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -46,7 +48,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
   }
 
   return (
-    <div className="space-y-4">
+      <div className="space-y-4">
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
@@ -73,9 +75,9 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
         </Select>
       </div>
 
-      {/* Table */}
-      <div className="rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <Table>
+          {/* Table */}
+          <div className="rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="dark:text-white">Order #</TableHead>
@@ -86,9 +88,12 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
               <TableHead className="w-[100px] dark:text-white">Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {filteredOrders.map((order) => (
-              <TableRow key={order.id}>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow
+                key={order.id}
+                className={order.status === 'Canceled' ? 'bg-red-50 dark:bg-red-900/30' : ''}
+              >
                 <TableCell className="dark:text-gray-300">
                   <a
                     href={order.popmartLink}
@@ -100,18 +105,109 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </TableCell>
-                <TableCell className="font-medium dark:text-gray-300">{order.productName}</TableCell>
-                <TableCell className="dark:text-gray-300">${order.purchasePrice.toFixed(2)}</TableCell>
+                <TableCell className="font-medium dark:text-gray-300">
+                  {editingCell?.id === order.id && editingCell?.field === "productName" && !isHistoryView ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                      />
+                      <Button size="sm" onClick={() => {
+                        onUpdate(order.id, { productName: editValue });
+                        setEditingCell(null);
+                        setEditValue("");
+                      }}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        setEditingCell(null);
+                        setEditValue("");
+                      }}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
+                      onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "productName" }), setEditValue(order.productName))}
+                    >
+                      {order.productName}
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell className="dark:text-gray-300">
-                  <a
-                    href={order.trackingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    Track
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  {editingCell?.id === order.id && editingCell?.field === "purchasePrice" && !isHistoryView ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                      />
+                      <Button size="sm" onClick={() => {
+                        onUpdate(order.id, { purchasePrice: Number.parseFloat(editValue) || 0 });
+                        setEditingCell(null);
+                        setEditValue("");
+                      }}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        setEditingCell(null);
+                        setEditValue("");
+                      }}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
+                      onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "purchasePrice" }), setEditValue(order.purchasePrice.toString()))}
+                    >
+                      ${order.purchasePrice.toFixed(2)}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="dark:text-gray-300">
+                  {editingCell?.id === order.id && editingCell?.field === "trackingLink" && !isHistoryView ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="url"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                      />
+                      <Button size="sm" onClick={() => {
+                        onUpdate(order.id, { trackingLink: editValue });
+                        setEditingCell(null);
+                        setEditValue("");
+                      }}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        setEditingCell(null);
+                        setEditValue("");
+                      }}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
+                      onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "trackingLink" }), setEditValue(order.trackingLink))}
+                    >
+                      <a
+                        href={order.trackingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        Track
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
                   {isHistoryView ? (
@@ -155,7 +251,10 @@ export function OrdersTable({ orders, onUpdate, onDelete, isHistoryView = false 
                 Total $ Spent
               </TableCell>
               <TableCell className="font-bold text-lg dark:text-white">
-                ${filteredOrders.reduce((sum, order) => sum + order.purchasePrice, 0).toFixed(2)}
+                ${filteredOrders
+                  .filter((order) => order.status !== 'Canceled')
+                  .reduce((sum, order) => sum + order.purchasePrice, 0)
+                  .toFixed(2)}
               </TableCell>
               <TableCell colSpan={3}></TableCell>
             </TableRow>
