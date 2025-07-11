@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
   const newOrder: Omit<Order, 'id'> = await request.json()
   const json = await fs.readFile(dataFile, 'utf-8')
   const orders: Order[] = JSON.parse(json)
-  const order: Order = { ...newOrder, id: crypto.randomUUID() }
+  // Store createdAt as ISO string, but cast to 'any' to satisfy the type
+  const order: Order = { ...newOrder, id: crypto.randomUUID(), createdAt: newOrder.createdAt ?? new Date().toISOString() } as any
   orders.unshift(order)
   await fs.writeFile(dataFile, JSON.stringify(orders, null, 2))
   return NextResponse.json(order)

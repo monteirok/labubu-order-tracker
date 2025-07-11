@@ -209,6 +209,12 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                 Tracking
               </TableHead>
               <TableHead
+                onClick={() => requestSort('createdAt')}
+                className="dark:text-white cursor-pointer"
+              >
+                Date Added
+              </TableHead>
+              <TableHead
                 onClick={() => requestSort('status')}
                 className="dark:text-white cursor-pointer"
               >
@@ -335,6 +341,9 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                       n/a
                     </div>
                   )}
+                </TableCell>
+                <TableCell className="dark:text-gray-300">
+                  {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "-"}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
                   {isHistoryView ? (
