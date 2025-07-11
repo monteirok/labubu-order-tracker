@@ -1,5 +1,49 @@
 [
   {
+    "customerName": "na",
+    "productName": "LABUBU - Exciting Macaron (Sesame Bean/Lychee Berry/Soymilk)",
+    "purchasePrice": 113.97,
+    "sellingPrice": 180,
+    "chatLink": "",
+    "notes": " ",
+    "status": "Pending",
+    "createdAt": "2025-07-11T10:39:33.277Z",
+    "id": "d5f3f23e-7b23-47db-a775-110fb0cfc8ef"
+  },
+  {
+    "customerName": "na",
+    "productName": "LABUBU - Big Into Energy (Luck/Loyalty/Serenity/Love)",
+    "purchasePrice": 151.96,
+    "sellingPrice": 280,
+    "chatLink": "",
+    "notes": " ",
+    "status": "Pending",
+    "createdAt": "2025-07-11T10:39:15.871Z",
+    "id": "7cd91e4f-fce7-423f-8711-497ed7cb300b"
+  },
+  {
+    "customerName": "na",
+    "productName": "LABUBU - Big Into Energy (Loyalty/Hapiness)",
+    "purchasePrice": 75.98,
+    "sellingPrice": 140,
+    "chatLink": "",
+    "notes": " ",
+    "status": "Pending",
+    "createdAt": "2025-07-11T10:38:57.998Z",
+    "id": "77110de6-15f4-4f7d-a870-aef7d4e994bf"
+  },
+  {
+    "customerName": "na",
+    "productName": "LABUBU - Have A Seat (Sisi)",
+    "purchasePrice": 44.44,
+    "sellingPrice": 50,
+    "chatLink": "",
+    "notes": " ",
+    "status": "Pending",
+    "createdAt": "2025-07-11T10:38:39.421Z",
+    "id": "172eefdd-726f-47b8-b7d5-a7772eadf279"
+  },
+  {
     "customerName": "StockX",
     "productName": "LABUBU - Big Into Energy (Luck)",
     "purchasePrice": 37.99,
