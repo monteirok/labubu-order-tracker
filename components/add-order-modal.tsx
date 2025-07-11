@@ -142,9 +142,8 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
             <Select
               value={formData.status}
               onValueChange={(value) => handleChange("status", value)}
-              className="dark:bg-gray-700 dark:border-gray-600"
             >
-              <SelectTrigger>
+              <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
