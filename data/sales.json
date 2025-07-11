@@ -1,1 +1,101 @@
-[]
+[
+  {
+    "customerName": "StockX",
+    "productName": "LABUBU - Big Into Energy (Luck)",
+    "purchasePrice": 37.99,
+    "sellingPrice": 87.91,
+    "chatLink": "",
+    "notes": "Sold on StockX (payout=$66USD >> $87.91CAD)",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:23:41.878Z",
+    "id": "cb41c5d9-fa78-42b0-9158-dfe2eb935a48"
+  },
+  {
+    "customerName": "Hashem",
+    "productName": "Green Grape",
+    "purchasePrice": 30,
+    "sellingPrice": 60,
+    "chatLink": "",
+    "notes": "",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:21:11.156Z",
+    "id": "b632972d-199b-4d26-b743-9fda1ae82911"
+  },
+  {
+    "customerName": "Shelby",
+    "productName": "Sisi",
+    "purchasePrice": 0,
+    "sellingPrice": 0,
+    "chatLink": "",
+    "notes": "traded for Hehe",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:05:13.722Z",
+    "id": "58f56516-4586-46f9-b4b4-6bf429e7661d"
+  },
+  {
+    "customerName": "Jesica",
+    "productName": "Sisi",
+    "purchasePrice": 0,
+    "sellingPrice": 56,
+    "chatLink": "",
+    "notes": "delivered ($6)",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:04:46.804Z",
+    "id": "eaaa2f28-da70-49f4-af11-a1d625af9f5e"
+  },
+  {
+    "customerName": "Andrew",
+    "productName": "Baba",
+    "purchasePrice": 0,
+    "sellingPrice": 50,
+    "chatLink": "",
+    "notes": "Order #n/a",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:04:20.204Z",
+    "id": "7d5521ec-575f-45f0-a595-1ccfed8daffd"
+  },
+  {
+    "customerName": "Aaron",
+    "productName": "Zizi",
+    "purchasePrice": 0,
+    "sellingPrice": 50,
+    "chatLink": "",
+    "notes": "Order #n/a",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:04:02.667Z",
+    "id": "f09a97bb-5a58-4cf0-9bfd-059810df48e4"
+  },
+  {
+    "customerName": "Meaghan",
+    "productName": "Ququ",
+    "purchasePrice": 0,
+    "sellingPrice": 50,
+    "chatLink": "",
+    "notes": "Order #n/a",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:03:49.142Z",
+    "id": "61d10653-ebfe-4632-9a8a-318dd80f3e96"
+  },
+  {
+    "customerName": "SaroSH",
+    "productName": "Sea Salt Coconut",
+    "purchasePrice": 0,
+    "sellingPrice": 50,
+    "chatLink": "",
+    "notes": "picked up at heritage, supposed to bring $60, but only brought $50",
+    "status": "Completed",
+    "createdAt": "2025-07-11T10:01:43.186Z",
+    "id": "c0ad95a1-a7be-4e06-81b1-0a5b1a97a634"
+  },
+  {
+    "customerName": "Liam",
+    "productName": "Toffee",
+    "purchasePrice": 0,
+    "sellingPrice": 30,
+    "chatLink": "",
+    "notes": "",
+    "status": "Completed",
+    "createdAt": "2025-07-11T09:59:51.226Z",
+    "id": "d1f48572-8707-4230-9363-50d4c4315835"
+  }
+]

@@ -192,16 +192,16 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
                 Product
               </TableHead>
               <TableHead
+                onClick={() => requestSort('purchasePrice')}
+                className="dark:text-white cursor-pointer"
+              >
+                Purchase Price (CAD)
+              </TableHead>
+              <TableHead
                 onClick={() => requestSort('sellingPrice')}
                 className="dark:text-white cursor-pointer"
               >
                 Price (CAD)
-              </TableHead>
-              <TableHead
-                onClick={() => requestSort('chatLink')}
-                className="dark:text-white cursor-pointer"
-              >
-                Chat
               </TableHead>
               <TableHead
                 onClick={() => requestSort('notes')}
@@ -263,6 +263,9 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
                 </TableCell>
                 <TableCell className="font-medium dark:text-gray-300">{sale.productName}</TableCell>
                 <TableCell className="dark:text-gray-300">
+                  {sale.purchasePrice !== undefined ? `$${sale.purchasePrice.toFixed(2)}` : "-"}
+                </TableCell>
+                <TableCell className="dark:text-gray-300">
                   {editingCell?.id === sale.id && editingCell?.field === "sellingPrice" && !isHistoryView ? (
                     <div className="flex items-center gap-2">
                       <Input
@@ -287,17 +290,6 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
                       ${sale.sellingPrice.toFixed(2)}
                     </div>
                   )}
-                </TableCell>
-                <TableCell className="dark:text-gray-300">
-                  <a
-                    href={sale.chatLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    Chat
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
                   {editingCell?.id === sale.id && editingCell?.field === "notes" && !isHistoryView ? (

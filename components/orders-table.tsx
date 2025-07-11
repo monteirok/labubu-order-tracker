@@ -254,7 +254,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   </a>
                 </TableCell>
                 <TableCell className="font-medium dark:text-gray-300">
-                  {editingCell?.id === order.id && editingCell?.field === "productName" && !isHistoryView ? (
+                  {editingCell?.id === order.id && editingCell?.field === "productName" ? (
                     <div className="flex items-center gap-2">
                       <Input
                         value={editValue}
@@ -278,7 +278,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   )}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
-                  {editingCell?.id === order.id && editingCell?.field === "purchasePrice" && !isHistoryView ? (
+                  {editingCell?.id === order.id && editingCell?.field === "purchasePrice" ? (
                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
@@ -304,7 +304,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   )}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
-                  {editingCell?.id === order.id && editingCell?.field === "trackingLink" && !isHistoryView ? (
+                  {editingCell?.id === order.id && editingCell?.field === "trackingLink" ? (
                     <div className="flex items-center gap-2">
                       <Input
                         value={editValue}

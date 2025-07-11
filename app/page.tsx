@@ -300,6 +300,7 @@ export default function Dashboard() {
                     onCreateSale={(order) => {
             setSaleInitialData({
                         productName: order.productName,
+                        purchasePrice: order.purchasePrice,
                         notes: `Order #${order.orderNumber}`,
                       })
                       setIsAddSaleOpen(true)

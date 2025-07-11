@@ -30,6 +30,7 @@ export function AddSaleModal({ open, onOpenChange, onAdd, initialData }: AddSale
   const [formData, setFormData] = useState({
     customerName: "",
     productName: "",
+    purchasePrice: "",
     sellingPrice: "",
     chatLink: "",
     notes: "",
@@ -46,6 +47,7 @@ export function AddSaleModal({ open, onOpenChange, onAdd, initialData }: AddSale
     onAdd({
       customerName: formData.customerName,
       productName: formData.productName,
+      purchasePrice: Number.parseFloat(formData.purchasePrice),
       sellingPrice: Number.parseFloat(formData.sellingPrice),
       chatLink: formData.chatLink,
       notes: formData.notes,
@@ -57,6 +59,7 @@ export function AddSaleModal({ open, onOpenChange, onAdd, initialData }: AddSale
     setFormData({
       customerName: "",
       productName: "",
+      purchasePrice: "",
       sellingPrice: "",
       chatLink: "",
       notes: "",
@@ -76,6 +79,7 @@ export function AddSaleModal({ open, onOpenChange, onAdd, initialData }: AddSale
       setFormData({
         customerName: initialData?.customerName ?? "",
         productName: initialData?.productName ?? "",
+        purchasePrice: initialData?.purchasePrice != null ? initialData.purchasePrice.toString() : "",
         sellingPrice: initialData?.sellingPrice != null ? initialData.sellingPrice.toString() : "",
         chatLink: initialData?.chatLink ?? "",
         notes: initialData?.notes ?? "",
@@ -174,7 +178,6 @@ export function AddSaleModal({ open, onOpenChange, onAdd, initialData }: AddSale
             <Select
               value={formData.status}
               onValueChange={(value) => handleChange("status", value)}
-              className="dark:bg-gray-700 dark:border-gray-600"
             >
               <SelectTrigger>
                 <SelectValue />

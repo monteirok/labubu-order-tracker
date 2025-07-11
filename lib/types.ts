@@ -16,6 +16,7 @@ export interface Sale {
   id: string
   customerName: string
   productName: string
+  purchasePrice: number
   sellingPrice: number
   chatLink: string
   notes: string
