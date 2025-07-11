@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,37 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
     const matchesStatus = statusFilter === "all" || sale.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  // Sorting
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Sale
+    direction: 'asc' | 'desc'
+  } | null>(null)
+  const requestSort = (key: keyof Sale) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig?.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+  }
+  const sortedSales = useMemo(() => {
+    if (!sortConfig) return filteredSales
+    const sorted = [...filteredSales].sort((a, b) => {
+      const aVal = a[sortConfig.key]
+      const bVal = b[sortConfig.key]
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal
+      }
+      const aStr = String(aVal)
+      const bStr = String(bVal)
+      return (
+        sortConfig.direction === 'asc'
+          ? aStr.localeCompare(bStr)
+          : bStr.localeCompare(aStr)
+      )
+    })
+    return sorted
+  }, [filteredSales, sortConfig])
 
   const getStatusColor = (status: SaleStatus) => {
     switch (status) {
@@ -113,15 +144,19 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
           Delete Selected ({selectedIds.size})
         </Button>
       )}
-      <div className="rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
+      <div className="overflow-auto rounded-lg bg-white dark:bg-gray-800 shadow-md">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-white dark:bg-gray-800 z-10">
             <TableRow>
 {isHistoryView && (
                 <TableHead className="w-10">
                   <Checkbox
                     checked={sales.length > 0 && selectedIds.size === filteredSales.length}
-                    indeterminate={selectedIds.size > 0 && selectedIds.size < filteredSales.length}
+                    indeterminate={
+                      selectedIds.size > 0 && selectedIds.size < filteredSales.length
+                        ? true
+                        : undefined
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) setSelectedIds(new Set(filteredSales.map((s) => s.id)))
                       else setSelectedIds(new Set())
@@ -129,18 +164,48 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
                   />
                 </TableHead>
               )}
-              <TableHead className="dark:text-white">Customer</TableHead>
-              <TableHead className="dark:text-white">Product</TableHead>
-              <TableHead className="dark:text-white">Price (CAD)</TableHead>
-              <TableHead className="dark:text-white">Chat</TableHead>
-              <TableHead className="dark:text-white">Notes</TableHead>
-              <TableHead className="dark:text-white">Status</TableHead>
+              <TableHead
+                onClick={() => requestSort('customerName')}
+                className="dark:text-white cursor-pointer"
+              >
+                Customer
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('productName')}
+                className="dark:text-white cursor-pointer"
+              >
+                Product
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('sellingPrice')}
+                className="dark:text-white cursor-pointer"
+              >
+                Price (CAD)
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('chatLink')}
+                className="dark:text-white cursor-pointer"
+              >
+                Chat
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('notes')}
+                className="dark:text-white cursor-pointer"
+              >
+                Notes
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('status')}
+                className="dark:text-white cursor-pointer"
+              >
+                Status
+              </TableHead>
               <TableHead className="w-[100px] dark:text-white">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredSales.map((sale) => (
-              <TableRow key={sale.id}>
+            {sortedSales.map((sale) => (
+              <TableRow key={sale.id} className="even:bg-gray-50 dark:even:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                 {isHistoryView && (
                   <TableCell>
                     <Checkbox
@@ -279,7 +344,7 @@ export function SalesTable({ sales, onUpdate, onDelete, isHistoryView = false }:
             ))}
           </TableBody>
           {isHistoryView && (
-            <TableFooter>
+          <TableFooter className="bg-white dark:bg-gray-800">
               <TableRow>
                 <TableCell colSpan={2} className="font-medium dark:text-white">
                   Total Revenue

@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -15,63 +13,77 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { Order, OrderStatus } from "@/lib/types"
 
-interface AddOrderModalProps {
+interface EditOrderModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onAdd: (order: Omit<Order, "id">) => void
+  order: Order | null
+  onSave: (updates: Partial<Order>) => void
 }
 
-export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps) {
+export function EditOrderModal({ open, onOpenChange, order, onSave }: EditOrderModalProps) {
+  const seriesOptions = [
+    'Big Into Energy',
+    'Exciting Macaron',
+    'Have A Seat',
+  ]
   const [formData, setFormData] = useState({
     orderNumber: "",
     productName: "",
     purchasePrice: "",
     trackingLink: "",
     status: "Ordered" as OrderStatus,
+    series: [] as string[],
   })
+
+  useEffect(() => {
+    if (order && open) {
+      setFormData({
+        orderNumber: order.orderNumber,
+        productName: order.productName,
+        purchasePrice: order.purchasePrice.toString(),
+        trackingLink: order.trackingLink,
+        status: order.status,
+        series: order.series,
+      })
+    }
+  }, [order, open])
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+  const handleSeriesChange = (option: string, checked: boolean) => {
+    setFormData((prev) => {
+      const series = checked
+        ? [...prev.series, option]
+        : prev.series.filter((s) => s !== option)
+      return { ...prev, series }
+    })
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!formData.orderNumber || !formData.productName || !formData.purchasePrice) {
-      return
-    }
-
-    onAdd({
+    if (!order) return
+    onSave({
       orderNumber: formData.orderNumber,
       popmartLink: `https://www.popmart.com/ca/order/${formData.orderNumber}`,
       productName: formData.productName,
       purchasePrice: Number.parseFloat(formData.purchasePrice),
       trackingLink: formData.trackingLink,
       status: formData.status,
-      createdAt: new Date(),
+      series: formData.series,
     })
-
-    // Reset form
-    setFormData({
-      orderNumber: "",
-      productName: "",
-      purchasePrice: "",
-      trackingLink: "",
-      status: "Ordered",
-    })
-
-    onOpenChange(false)
-  }
-
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] dark:bg-gray-800 dark:border-gray-700">
         <DialogHeader>
-          <DialogTitle className="dark:text-white">Add New Order</DialogTitle>
+          <DialogTitle className="dark:text-white">Edit Order</DialogTitle>
           <DialogDescription className="dark:text-gray-300">
-            Add a new Labubu order to track its status and delivery.
+            Update the details of the order.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,12 +96,10 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
               id="orderNumber"
               value={formData.orderNumber}
               onChange={(e) => handleChange("orderNumber", e.target.value)}
-              placeholder="PM-2024-001"
               required
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
-
 
           <div className="space-y-2">
             <Label htmlFor="productName" className="dark:text-white">
@@ -99,11 +109,11 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
               id="productName"
               value={formData.productName}
               onChange={(e) => handleChange("productName", e.target.value)}
-              placeholder="Labubu The Monsters Series"
               required
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="purchasePrice" className="dark:text-white">
               Purchase Price (CAD) *
@@ -114,7 +124,6 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
               step="0.01"
               value={formData.purchasePrice}
               onChange={(e) => handleChange("purchasePrice", e.target.value)}
-              placeholder="15.99"
               required
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
@@ -129,11 +138,28 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
               type="url"
               value={formData.trackingLink}
               onChange={(e) => handleChange("trackingLink", e.target.value)}
-              placeholder="https://track.canadapost.ca/..."
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
 
+          <div className="space-y-2">
+            <Label className="dark:text-white">Series</Label>
+            <div className="space-y-1">
+              {seriesOptions.map((option) => (
+                <div key={option} className="flex items-center">
+                  <Checkbox
+                    id={`series-${option}`}
+                    checked={formData.series.includes(option)}
+                    onCheckedChange={(checked) => handleSeriesChange(option, !!checked)}
+                    className="mr-2"
+                  />
+                  <Label htmlFor={`series-${option}`} className="dark:text-white cursor-pointer">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="status" className="dark:text-white">
@@ -161,7 +187,7 @@ export function AddOrderModal({ open, onOpenChange, onAdd }: AddOrderModalProps)
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Add Order</Button>
+            <Button type="submit">Save</Button>
           </DialogFooter>
         </form>
       </DialogContent>

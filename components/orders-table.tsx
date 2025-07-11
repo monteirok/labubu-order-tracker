@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Search, Trash2, Check, X, TrendingUp } from "lucide-react"
+import { ExternalLink, Search, Trash2, TrendingUp, Edit3 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Order, OrderStatus } from "@/lib/types"
+import { EditOrderModal } from "@/components/edit-order-modal"
 
 interface OrdersTableProps {
   orders: Order[]
@@ -22,9 +23,9 @@ interface OrdersTableProps {
 export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistoryView = false }: OrdersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all")
-  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null)
-  const [editValue, setEditValue] = useState("")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -33,6 +34,37 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
     const matchesStatus = statusFilter === "all" || order.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  // Sorting
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Order
+    direction: 'asc' | 'desc'
+  } | null>(null)
+  const requestSort = (key: keyof Order) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig?.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+  }
+  const sortedOrders = useMemo(() => {
+    if (!sortConfig) return filteredOrders
+    const sorted = [...filteredOrders].sort((a, b) => {
+      const aVal = a[sortConfig.key]
+      const bVal = b[sortConfig.key]
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal
+      }
+      const aStr = String(aVal)
+      const bStr = String(bVal)
+      return (
+        (sortConfig.direction === 'asc'
+          ? aStr.localeCompare(bStr)
+          : bStr.localeCompare(aStr))
+      )
+    })
+    return sorted
+  }, [filteredOrders, sortConfig])
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -107,15 +139,19 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
       </div>
 
           {/* Table */}
-          <div className="rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <Table>
-          <TableHeader>
+      <div className="overflow-auto rounded-lg bg-white dark:bg-gray-800 shadow-md">
+        <Table>
+          <TableHeader className="sticky top-0 bg-white dark:bg-gray-800 z-10">
             <TableRow>
               {isHistoryView && (
                 <TableHead className="w-10">
                   <Checkbox
                     checked={filteredOrders.length > 0 && selectedIds.size === filteredOrders.length}
-                    indeterminate={selectedIds.size > 0 && selectedIds.size < filteredOrders.length}
+                    indeterminate={
+                      selectedIds.size > 0 && selectedIds.size < filteredOrders.length
+                        ? true
+                        : undefined
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) {
                         setSelectedIds(new Set(filteredOrders.map((o) => o.id)))
@@ -126,17 +162,45 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   />
                 </TableHead>
               )}
-              <TableHead className="dark:text-white">Order #</TableHead>
-              <TableHead className="dark:text-white">Product</TableHead>
-              <TableHead className="dark:text-white">Price (CAD)</TableHead>
-              <TableHead className="dark:text-white">Tracking</TableHead>
-              <TableHead className="dark:text-white">Status</TableHead>
+              <TableHead
+                onClick={() => requestSort('orderNumber')}
+                className="dark:text-white cursor-pointer"
+              >
+                Order #
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('productName')}
+                className="dark:text-white cursor-pointer"
+              >
+                Product
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('purchasePrice')}
+                className="dark:text-white cursor-pointer"
+              >
+                Price (CAD)
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('trackingLink')}
+                className="dark:text-white cursor-pointer"
+              >
+                Tracking
+              </TableHead>
+              <TableHead
+                onClick={() => requestSort('status')}
+                className="dark:text-white cursor-pointer"
+              >
+                Status
+              </TableHead>
               <TableHead className="w-[100px] dark:text-white">Actions</TableHead>
             </TableRow>
           </TableHeader>
               <TableBody>
-            {filteredOrders.map((order) => (
-              <TableRow key={order.id} className={getRowHighlight(order.status)}>
+            {sortedOrders.map((order) => (
+              <TableRow
+                key={order.id}
+                className={`${getRowHighlight(order.status)} even:bg-gray-50 dark:even:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors`}
+              >
                 {isHistoryView && (
                   <TableCell>
                     <Checkbox
@@ -162,111 +226,26 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   </a>
                 </TableCell>
                 <TableCell className="font-medium dark:text-gray-300">
-                  {editingCell?.id === order.id && editingCell?.field === "productName" && !isHistoryView ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                      />
-                      <Button size="sm" onClick={() => {
-                        onUpdate(order.id, { productName: editValue });
-                        setEditingCell(null);
-                        setEditValue("");
-                      }}>
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        setEditingCell(null);
-                        setEditValue("");
-                      }}>
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div
-                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
-                      onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "productName" }), setEditValue(order.productName))}
-                    >
-                      {order.productName}
-                    </div>
-                  )}
+                  {order.productName}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
-                  {editingCell?.id === order.id && editingCell?.field === "purchasePrice" && !isHistoryView ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="w-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                      />
-                      <Button size="sm" onClick={() => {
-                        onUpdate(order.id, { purchasePrice: Number.parseFloat(editValue) || 0 });
-                        setEditingCell(null);
-                        setEditValue("");
-                      }}>
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        setEditingCell(null);
-                        setEditValue("");
-                      }}>
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div
-                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
-                      onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "purchasePrice" }), setEditValue(order.purchasePrice.toString()))}
-                    >
-                      ${order.purchasePrice.toFixed(2)}
-                    </div>
-                  )}
+                  ${order.purchasePrice.toFixed(2)}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
-                  {editingCell?.id === order.id && editingCell?.field === "trackingLink" && !isHistoryView ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="url"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                      />
-                      <Button size="sm" onClick={() => {
-                        onUpdate(order.id, { trackingLink: editValue });
-                        setEditingCell(null);
-                        setEditValue("");
-                      }}>
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        setEditingCell(null);
-                        setEditValue("");
-                      }}>
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div
-                      className={`${!isHistoryView ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" : ""} p-1 rounded`}
-                      onClick={() => !isHistoryView && (setEditingCell({ id: order.id, field: "trackingLink" }), setEditValue(order.trackingLink))}
+                  {order.trackingLink ? (
+                    <a
+                      href={order.trackingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                     >
-                      {order.trackingLink ? (
-                        <a
-                          href={order.trackingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                        >
-                          Track
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        <span className="text-gray-500 dark:text-gray-400">N/A</span>
-                      )}
-                    </div>
+                      Track
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : (
+                    <span className="italic lowercase text-red-600 text-center block w-full">
+                      n/a
+                    </span>
                   )}
                 </TableCell>
                 <TableCell className="dark:text-gray-300">
@@ -306,6 +285,17 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => {
+                          setEditingOrder(order)
+                          setEditModalOpen(true)
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onDelete(order.id)}
                         className="text-red-600 hover:text-red-800"
                       >
@@ -317,7 +307,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
               </TableRow>
             ))}
           </TableBody>
-          <TableFooter>
+          <TableFooter className="bg-white dark:bg-gray-800">
             <TableRow>
               <TableCell colSpan={2} className="font-medium dark:text-white">
                 Total $ Spent
@@ -328,7 +318,7 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
                   .reduce((sum, order) => sum + order.purchasePrice, 0)
                   .toFixed(2)}
               </TableCell>
-              <TableCell colSpan={3}></TableCell>
+              <TableCell colSpan={2}></TableCell>
             </TableRow>
           </TableFooter>
         </Table>
@@ -337,6 +327,21 @@ export function OrdersTable({ orders, onUpdate, onDelete, onCreateSale, isHistor
       {filteredOrders.length === 0 && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">No orders found matching your criteria.</div>
       )}
+      <EditOrderModal
+        open={editModalOpen}
+        onOpenChange={(open) => {
+          setEditModalOpen(open)
+          if (!open) setEditingOrder(null)
+        }}
+        order={editingOrder}
+        onSave={(updates) => {
+          if (editingOrder) {
+            onUpdate(editingOrder.id, updates)
+          }
+          setEditModalOpen(false)
+          setEditingOrder(null)
+        }}
+      />
     </div>
   )
 }
