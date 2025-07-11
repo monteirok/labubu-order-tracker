@@ -1,5 +1,5 @@
 # Labubu Order Tracker
 
 ## Run
-``npm install
-npm run dev``
+``npm install``
+``npm run dev``
